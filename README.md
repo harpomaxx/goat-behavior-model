@@ -24,6 +24,11 @@ Moreover, the simplicity of the resulting model not only reduces computational c
 
 Please refer to the Jupyter notebook `goat_behavior_prediction` for an overview and usage of this model.
 
+## Shiny App
+
+There also a minimal shiny app where you can try the model.
+The shiny app is available at [Hugging Face](https://huggingface.co/spaces/harpomaxx/goat-behavior) :hugginface:
+
 ## Contribute
 
 This is an open-source project. Contributions are always welcome!
