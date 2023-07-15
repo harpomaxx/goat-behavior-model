@@ -27,7 +27,7 @@ Please refer to the Jupyter notebook `goat_behavior_prediction` for an overview 
 ## Shiny App
 
 There also a minimal shiny app where you can try the model.
-The shiny app is available at [Hugging Face](https://huggingface.co/spaces/harpomaxx/goat-behavior) :hugginface:
+The shiny app is available at [Hugging Face](https://huggingface.co/spaces/harpomaxx/goat-behavior) 🤗
 
 ## Contribute
 
