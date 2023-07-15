@@ -1,0 +1,92 @@
+---
+title: "Developing an Interpretable Machine Learning Model for the Detection of Mimosa Grazing in Goats"
+output: html_notebook
+---
+
+# Import Libraries
+
+We start by importing the required libraries.
+
+`caret` is used for machine learning and data pre-processing
+
+`readr` is used for reading data from various file types
+
+`catboost` is a machine learning algorithm library that provides efficient implementations of gradient boosting
+
+```{r}
+library(caret)
+library(readr)
+library(catboost)
+```
+
+# Load Pretrained Model
+
+We load our previously trained model from a serialized `rds` file. The serialized file contains a `caret` mode. This model was trained to predict goat behaviour
+
+```{r}
+model <- readRDS("models/goat_behavior_model_caret.rds")
+```
+
+# Load Dataset
+
+Next, we load our dataset from a tab separated value ('tsv') file. This dataset contains our input features for the model.
+
+```{r}
+dataset <- readr::read_delim("data/split/dataset_b.tsv",delim='\t')
+dataset
+```
+
+# Display Model
+
+We then print our loaded model for review. This output would contain details about the model, it's parameters and training details. The serialized file contains a `caret` model. Inside the caret model, you can access the original `catboost` model via `model$FinaModel`
+
+```{r}
+model
+```
+
+# Generate Predictions
+
+Using our trained model, we generate predictions on our dataset. These predictions would indicate the behaviour of goats as determined by the model.
+
+Notice that in this case not all the features are used for prediction. The caret `model` file includes the information about the selected features used for prediction.
+
+For a custom dataset you should include at least the following features:
+
+|     | **Feature**    | **Definition**                                                                   |
+|----------------|----------------|---------------------------------------|
+| 1   | Steps          | Number of steps                                                                  |
+| 2   | HeadDown       | \% time with head down                                                           |
+| 3   | Standing       | \% time Standing                                                                 |
+| 4   | Active         | \% time Active                                                                   |
+| 5   | MeanXY         | Arithmetic mean between X and Y positions                                        |
+| 6   | Distance       | Distance in meters                                                               |
+| 7   | prev_steps1    | Number of steps one step backward                                                |
+| 8   | X_Act          | X position actuator                                                              |
+| 9   | prev_Active1   | \% time Active one step backward                                                 |
+| 10  | prev_Standing1 | \% time Standing one step backward                                               |
+| 11  | DFA123         | Accumulative Euclidean distance from actual position to three positions forward  |
+| 12  | prev_headdown1 | \% time with head down one step backward                                         |
+| 13  | Lying          | \% time Lying                                                                    |
+| 14  | Y_Act          | Y position actuator                                                              |
+| 15  | DBA123         | Accumulative Euclidean distance from actual position to three positions backward |
+
+```{r}
+predictions <- predict(model, dataset)
+```
+
+# Print Predictions
+
+We then print our model's predictions. This would show what behaviours the model predicted for each row in our dataset
+
+```{r}
+predictions
+```
+
+# Evaluate Model Performance
+
+Lastly, we calculate and display the confusion matrix for our model's predictions. This provides us with metrics such as accuracy, recall, precision etc that give us insights into how well our model performed
+
+```{r}
+cm<-caret::confusionMatrix(reference=as.factor(dataset$Activity),predictions,mode="everything")
+cm$overall
+```
