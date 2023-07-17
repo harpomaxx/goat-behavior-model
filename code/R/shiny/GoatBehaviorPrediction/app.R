@@ -4,6 +4,10 @@ library(caret)
 library(readr)
 library(catboost)
 library(ggplot2)
+library(gridExtra)
+
+source("calculate_shap.R")
+source("plot_shap.R")
 
 # Load the pre-trained model
 model <- readRDS("goat_behavior_model_caret.rds")
@@ -149,7 +153,18 @@ ui <- fluidPage(
                  tableOutput("contents"),
                  verbatimTextOutput("confusionMatText"),
                  plotOutput("confusionMatPlot"),
-                 downloadButton("downloadData", "Download Predictions"))
+                 downloadButton("downloadData", "Download Predictions")),
+       
+         tabPanel("SHAP Summary",
+                 plotOutput("SHAPSummary")),
+        
+        tabPanel("SHAP Summary per class",
+                 plotOutput("SHAPSummaryperclass")),
+        
+        tabPanel("SHAP Dependency",
+                 plotOutput("SHAPDependency"))
+                 
+        
       )
     )
   )
@@ -228,6 +243,97 @@ server <- function(input, output) {
       scale_fill_gradient(low = "white", high = "steelblue") +
       theme_minimal() +
       theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+  })
+  
+  output$SHAPSummary <- renderPlot({
+    
+    if (is.null(input$file1))
+      return(NULL)
+    
+    inFile <- input$file1
+    dataset <- readr::read_delim(inFile$datapath,delim='\t')
+    predictions <- predict(model, dataset)
+    selected_variables <-
+      readr::read_delim(
+        "selected_features.tsv",
+        col_types = cols(),
+        delim = '\t'
+      )
+    new_dataset <-
+      dataset %>% select(selected_variables$variable, Anim, Activity)
+    new_dataset <- cbind(new_dataset, predictions)
+    
+    shap_values <- calculate_shap(new_dataset, model, nsim = 30)
+    pall<-shap_summary_plot(shap_values %>% as.data.frame())
+    pall+xlim(0,0.35)
+  })
+  
+  output$SHAPSummaryperclass <- renderPlot({
+    
+    if (is.null(input$file1))
+      return(NULL)
+    
+    inFile <- input$file1
+    dataset <- readr::read_delim(inFile$datapath,delim='\t')
+    predictions <- predict(model, dataset)
+    selected_variables <-
+      readr::read_delim(
+        "selected_features.tsv",
+        col_types = cols(),
+        delim = '\t'
+      )
+    new_dataset <-
+      dataset %>% select(selected_variables$variable, Anim, Activity)
+    new_dataset <- cbind(new_dataset, predictions)
+    
+    shap_values <- calculate_shap(new_dataset, model, nsim = 30)
+    
+    pW<-shap_summary_plot_perclass(shap_values, class= "W",color="#C77CFF")+xlab("Activity W")+xlim(0,0.25)
+    pGM<-shap_summary_plot_perclass(shap_values, class= "GM",color="#7CAE00")+xlab("Activity GM")+xlim(0,0.25)
+    pG<-shap_summary_plot_perclass(shap_values, class= "G",color="#F8766D")+xlab("Activity G")+xlim(0,0.25)
+    pR<-shap_summary_plot_perclass(shap_values, class= "R",color="#00BFC4")+xlab("Activity R")+xlim(0,0.25)
+    
+    grid.arrange(pW,pR,pG,pGM)
+    
+    
+    
+  })
+  output$SHAPDependency <- renderPlot({
+    
+    if (is.null(input$file1))
+      return(NULL)
+    
+    inFile <- input$file1
+    dataset <- readr::read_delim(inFile$datapath,delim='\t')
+    predictions <- predict(model, dataset)
+    selected_variables <-
+      readr::read_delim(
+        "selected_features.tsv",
+        col_types = cols(),
+        delim = '\t'
+      )
+    new_dataset <-
+      dataset %>% select(selected_variables$variable, Anim, Activity)
+    new_dataset <- cbind(new_dataset, predictions)
+    
+    shap_values <- calculate_shap(new_dataset, model, nsim = 30) 
+    
+    li<-list()
+    li[[1]]<-dependency_plot("Steps",dataset = new_dataset,shap=shap_values)
+    #li[[2]]<-dependency_plot("prev_steps1",dataset = new_dataset,shap=shap_values)
+    li[[2]]<-dependency_plot("%HeadDown",dataset = new_dataset,shap=shap_values)
+    #li[[4]]<-dependency_plot("prev_headdown1",dataset = new_dataset,shap=shap_values)
+    li[[3]]<-dependency_plot("Active",dataset = new_dataset,shap=shap_values)
+    #li[[6]]<-dependency_plot("prev_Active1",dataset = new_dataset,shap=shap_values)
+    li[[4]]<-dependency_plot("Standing",dataset = new_dataset,shap=shap_values)
+    #li[[8]]<-dependency_plot("prev_Standing1",dataset = new_dataset,shap=shap_values)
+    #li[[9]]<-dependency_plot("X_Act",dataset = new_dataset, shap=shap_values)
+    #li[[10]]<-dependency_plot("Y_Act",dataset = new_dataset, shap=shap_values)
+    #li[[11]]<-dependency_plot("DBA123",dataset = new_dataset, shap=shap_values)
+    #li[[12]]<-dependency_plot("DFA123",dataset = new_dataset, shap=shap_values)
+    do.call(grid.arrange, c(li, ncol = 1)) 
+    
+    
   })
 }
 
