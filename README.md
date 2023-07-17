@@ -1,3 +1,6 @@
+[![DOI](https://zenodo.org/badge/666764274.svg)](https://zenodo.org/badge/latestdoi/666764274)
+
+
 # Goat Behavior Detection Model
 
 ## Overview
