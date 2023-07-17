@@ -1,5 +1,6 @@
 [![DOI](https://zenodo.org/badge/666764274.svg)](https://zenodo.org/badge/latestdoi/666764274)
 
+**You can try the model using a shiny space at [Hugging Face](https://huggingface.co/spaces/harpomaxx/goat-behavior) 🤗**
 
 # Goat Behavior Detection Model
 
@@ -30,7 +31,7 @@ Please refer to the Jupyter notebook `goat_behavior_prediction` for an overview 
 ## Shiny App
 
 There also a minimal shiny app where you can try the model.
-The shiny app is available at [Hugging Face](https://huggingface.co/spaces/harpomaxx/goat-behavior) 🤗
+
 
 ## Contribute
 
